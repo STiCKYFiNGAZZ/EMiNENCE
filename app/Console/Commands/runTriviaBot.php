@@ -12,11 +12,9 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Command;
 use App\Bots\TriviaBot;
 use App\Game;
-use App\Player;
-use App\Question;
-use App\QuestionSet;
 use Carbon\Carbon;
 
 class runTriviaBot extends Command
@@ -48,7 +46,7 @@ class runTriviaBot extends Command
             $game->last_asked = $timestamp;
             $game->round_month = date("n");
             $game->save();
-            $bot = new TriviaBot("Trivia Bot");
+            $bot = new TriviaBot(2);
 
             //check if there's a question being asked
             $question = $bot->getCurrentQuestion();

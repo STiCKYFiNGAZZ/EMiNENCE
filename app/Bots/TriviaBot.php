@@ -13,13 +13,25 @@
 namespace App\Bots;
 
 use App\Game;
-use App\Player;
 use App\Question;
 use App\QuestionSet;
+use App\Message;
 
 class TriviaBot
 {
+    /**
+     * @var Message
+     */
+    private $message;
+
+    /**
+     * @var Channel
+     */
     private $channel;
+
+    /**
+     * @var Bot ID
+     */
     private $bot_id;
 
 
@@ -29,6 +41,10 @@ class TriviaBot
         $this->bot_id = $bot_id;
     }
 
+    /**
+     * Start The Bot
+     *
+     */
     public function start()
     {
         $game = Game::first();
@@ -54,6 +70,10 @@ class TriviaBot
         $game->save();
     }
 
+    /**
+     * Stop The Bot
+     *
+     */
     public function stop()
     {
         //set the flag in the database to say the game is not running
@@ -62,13 +82,9 @@ class TriviaBot
         $game->save();
     }
 
-    public function getCurrentQuestion()
-    {
-        return Question::find('first', ['conditions' => 'current_hint > 0']);
-    }
-
-
     /**
+     * Load The Question Set
+     *
      * @param bool $question_file
      * @param bool $force
      * @return string
@@ -83,7 +99,7 @@ class TriviaBot
                 $questions = file($file, FILE_IGNORE_NEW_LINES);
 
                 $title = ltrim($questions[0], "# ");
-                $question_set = Question_set::create(["filename" => $question_file, "title" => $title]);
+                $question_set = QuestionSet::create(["filename" => $question_file, "title" => $title]);
 
                 foreach ($questions as $question) {
                     $question = trim($question);
@@ -115,9 +131,17 @@ class TriviaBot
             }
         } else {
             $set = $this->get_question_set_by_filename($question_file);
-            $response .= "The *{$set->title}* set is already loaded!";
+            $response .= "The [b]{$set->title}[/b] set is already loaded!";
         }
         return $response;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCurrentQuestion()
+    {
+        return Question::find('first', ['conditions' => 'current_hint > 0']);
     }
 
     /**
@@ -144,7 +168,7 @@ class TriviaBot
      */
     private function get_question_set_by_filename($filename)
     {
-        $set = Question_set::find_by_filename($filename);
+        $set = QuestionSet::find_by_filename($filename);
         return $set;
     }
 
@@ -163,7 +187,7 @@ class TriviaBot
      */
     private function is_loaded($question_file)
     {
-        $set = Question_set::find_by_filename($question_file);
+        $set = QuestionSet::find_by_filename($question_file);
         return (!empty($set));
     }
 
@@ -191,7 +215,7 @@ class TriviaBot
     /**
      * @param mixed $bot_id
      */
-    public function setBotName($bot_id)
+    public function setBotID($bot_id)
     {
         $this->bot_id = $bot_id;
     }

@@ -17,15 +17,13 @@ use App\Events\MessageSent;
 use Exception;
 use App\Game;
 use App\Player;
-use App\Question;
-use App\QuestionSet;
 use Carbon\Carbon;
 
 class TriviaBotListener
 {
     public function handle(MessageSent $event)
     {
-        $bot = new TriviaBot("Trivia Bot");
+        $bot = new TriviaBot(2);
         $game = Game::first();
         if (empty($game)) {
             try {
@@ -124,7 +122,7 @@ class TriviaBotListener
                         $bot->sendMessageToChannel(" :interrobang: You forgot to tell me who you're looking for!");
                     } else {
                         $seen_name = trim($command[2]);
-                        $seen_player = \Player::find('first', ['name' => $seen_name]);
+                        $seen_player = Player::find('first', ['name' => $seen_name]);
                         $now = time();
                         if (empty($seen_player)) {
                             $message = "Sorry, {$player_name}, I've never seen {$seen_name}!";
