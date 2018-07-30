@@ -16,14 +16,10 @@ use App\Game;
 use App\Question;
 use App\QuestionSet;
 use App\Message;
+use Carbon\Carbon;
 
 class TriviaBot
 {
-    /**
-     * @var Message
-     */
-    private $message;
-
     /**
      * @var Channel
      */
@@ -49,7 +45,7 @@ class TriviaBot
     {
         $game = Game::first();
         if (empty($game)) {
-            $game = Game::create(["started" => 0, "stopping" => 0, "delay" => 20]);
+            $game = Game::create(["started" => 0, "stopping" => 0, "delay" => 20, "last_asked" => Carbon::now()]);
         }
 
         //set all questions to OFF
@@ -62,7 +58,7 @@ class TriviaBot
 
         // \Question::update_all(array('set' => 'current_hint = 0'));
         //set a random question to ON
-        $question = Question::find('first', ["order" => "RAND()"]);
+        $question = Question::inRandomOrder()->first();
         $question->current_hint = 1;
         $question->save();
 
@@ -142,7 +138,7 @@ class TriviaBot
      */
     public function getCurrentQuestion()
     {
-        return Question::find('first', ['conditions' => 'current_hint > 0']);
+        return Question::where('current_hint', '>', 0)->first();
     }
 
     /**
@@ -199,7 +195,7 @@ class TriviaBot
      */
     public function sendMessageToChannel($message)
     {
-        $this->message->create([
+        Message::create([
             'user_id' => $this->getBotID(),
             'chatroom_id' => $this->getChannel(),
             'message' => $message

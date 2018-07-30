@@ -16,5 +16,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Game extends Model
 {
-    //
+    /**
+     * The Attributes That Are Mass Assignable
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'started',
+        'stopping',
+        'delay',
+        'last_asked',
+        'current_hint'
+    ];
 }

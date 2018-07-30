@@ -40,13 +40,16 @@ class runTriviaBot extends Command
      */
     public function handle()
     {
+        $bot = new TriviaBot();
         $game = Game::first();
         $timestamp = Carbon::now();
-        if (($game->last_asked + $game->delay) <= $timestamp && $game->started == 1) {
+        if (!$game) {
+            $bot->start();
+        }
+        if ($game->last_asked <= $timestamp && $game->started == 1) {
             $game->last_asked = $timestamp;
             $game->round_month = date("n");
             $game->save();
-            $bot = new TriviaBot();
 
             //check if there's a question being asked
             $question = $bot->getCurrentQuestion();
@@ -95,7 +98,7 @@ class runTriviaBot extends Command
 
                     $question->current_hint = -1; // this gets incremented by 1 (to 0 - off) after these conditionals
                     $game->questions_without_reply++;
-                    if ($game->questions_without_reply == 10) {
+                    if ($game->questions_without_reply == 3) {
                         $game->stopping = 1;
                         $hint .= "\nNobody appears to be playing!";
                     }
@@ -116,7 +119,6 @@ class runTriviaBot extends Command
 
                 //send the question and hint/answer to channel
                 $message = "{$questiontext}\n{$hint}";
-                echo "Messsage: $message";
                 $bot->sendMessageToChannel($message);
             } else {
                 $bot->start();
