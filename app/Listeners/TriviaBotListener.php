@@ -23,7 +23,7 @@ class TriviaBotListener
 {
     public function handle(MessageSent $event)
     {
-        $bot = new TriviaBot(2);
+        $bot = new TriviaBot();
         $game = Game::first();
         if (empty($game)) {
             try {

@@ -35,10 +35,10 @@ class TriviaBot
     private $bot_id;
 
 
-    public function __construct($bot_id)
+    public function __construct()
     {
-        $this->channel = "Trivia";
-        $this->bot_id = $bot_id;
+        $this->channel = 2; //Trivia
+        $this->bot_id = 2; //Bot Account
     }
 
     /**
@@ -125,7 +125,7 @@ class TriviaBot
                     }
                 }
                 $total_questions = $this->get_total_questions();
-                $response .= "Questions from *{$title}* loaded! There are *{$total_questions}* in the database.";
+                $response .= "Questions from [b]{$title}[/b] loaded! There are [b]{$total_questions}[/b] in the database.";
             } else {
                 $response .= "No question file found";
             }
@@ -138,6 +138,7 @@ class TriviaBot
 
     /**
      * @return mixed
+     *
      */
     public function getCurrentQuestion()
     {
@@ -146,6 +147,7 @@ class TriviaBot
 
     /**
      * @return mixed
+     *
      */
     public function get_total_questions()
     {
@@ -206,6 +208,7 @@ class TriviaBot
 
     /**
      * @return mixed
+     *
      */
     public function getBotID()
     {
@@ -214,6 +217,7 @@ class TriviaBot
 
     /**
      * @param mixed $bot_id
+     *
      */
     public function setBotID($bot_id)
     {
@@ -222,6 +226,7 @@ class TriviaBot
 
     /**
      * @return mixed
+     *
      */
     public function getChannel()
     {
@@ -230,6 +235,7 @@ class TriviaBot
 
     /**
      * @param mixed $channel
+     *
      */
     public function setChannel($channel)
     {

@@ -46,7 +46,7 @@ class runTriviaBot extends Command
             $game->last_asked = $timestamp;
             $game->round_month = date("n");
             $game->save();
-            $bot = new TriviaBot(2);
+            $bot = new TriviaBot();
 
             //check if there's a question being asked
             $question = $bot->getCurrentQuestion();
@@ -91,7 +91,7 @@ class runTriviaBot extends Command
                 } else //by this time we just want to see the answer - no more clues!
                 {
                     $questiontext = "";
-                    $hint = "[b]Nobody got it![/b] The answer was [i]{$answer}[/i]";
+                    $hint = "[b]Nobody got it![/b] The answer was [b][i]{$answer}[/i][/b]";
 
                     $question->current_hint = -1; // this gets incremented by 1 (to 0 - off) after these conditionals
                     $game->questions_without_reply++;
