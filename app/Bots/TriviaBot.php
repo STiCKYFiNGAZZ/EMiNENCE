@@ -20,15 +20,13 @@ use App\QuestionSet;
 class TriviaBot
 {
     private $channel;
-    private $icon_emoji;
-    private $bot_name;
+    private $bot_id;
 
 
-    public function __construct($bot_name)
+    public function __construct($bot_id)
     {
         $this->channel = "Trivia";
-        $this->bot_name = $bot_name;
-        $this->icon_emoji = ":grinning:";
+        $this->bot_id = $bot_id;
     }
 
     public function start()
@@ -172,32 +170,30 @@ class TriviaBot
     /**
      * @param string $message
      *
-     * @return string JSON encoded
      */
     public function sendMessageToChannel($message)
     {
-        return json_encode(array(
-                "text" => $message,
-                "channel" => $this->getChannel(),
-                "username" => $this->getBotName(),
-                "icon_emoji" => $this->getIconEmoji())
-        );
+        $this->message->create([
+            'user_id' => $this->getBotID(),
+            'chatroom_id' => $this->getChannel(),
+            'message' => $message
+        ]);
     }
 
     /**
      * @return mixed
      */
-    public function getBotName()
+    public function getBotID()
     {
-        return $this->bot_name;
+        return $this->bot_id;
     }
 
     /**
-     * @param mixed $bot_name
+     * @param mixed $bot_id
      */
-    public function setBotName($bot_name)
+    public function setBotName($bot_id)
     {
-        $this->bot_name = $bot_name;
+        $this->bot_id = $bot_id;
     }
 
     /**
@@ -214,22 +210,6 @@ class TriviaBot
     public function setChannel($channel)
     {
         $this->channel = $channel;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getIconEmoji()
-    {
-        return $this->icon_emoji;
-    }
-
-    /**
-     * @param mixed $icon_emoji
-     */
-    public function setIconEmoji($icon_emoji)
-    {
-        $this->icon_emoji = $icon_emoji;
     }
 
     public function started()

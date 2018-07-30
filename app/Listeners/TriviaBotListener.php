@@ -19,6 +19,7 @@ use App\Game;
 use App\Player;
 use App\Question;
 use App\QuestionSet;
+use Carbon\Carbon;
 
 class TriviaBotListener
 {
@@ -30,23 +31,23 @@ class TriviaBotListener
             try {
                 $game = Game::create(["started" => 0, "stopping" => 0, "delay" => 20, 'last_asked' => 0]);
             } catch (Exception $e) {
-                die($bot->sendMessageToChannel($e->getMessage()));
+                $bot->sendMessageToChannel($e->getMessage());
             }
         }
-        $player_id = $_POST['user_id'];
-        $player_name = $_POST['user_name'];
-        $player_text = $_POST['text'];
-        $player_channel = $_POST['channel_name'];
-        $timestamp = time();
-        $player = Player::find("first", ["slack_id" => $player_id]);
+        $player_id = auth()->user()->id;
+        $player_name = auth()->user()->username;
+        $player_text = //;
+        $player_channel = //;
+        $timestamp = Carbon::now();
+        $player = Player::find("first", ["user_id" => $player_id]);
         if (empty($player)) {
             try {
-                $player = \Player::create([
-                    "slack_id" => $player_id,
+                $player = Player::create([
+                    "user_id" => $player_id,
                     "name" => $player_name,
                 ]);
             } catch (Exception $e) {
-                die($bot->sendMessageToChannel($e->getMessage()));
+                $bot->sendMessageToChannel($e->getMessage());
             }
         }
         $player->name = $player_name;
@@ -62,35 +63,30 @@ class TriviaBotListener
             switch ($command[1]) {
                 case "load":
                     if (empty($command[2])) {
-                        $bot->setIconEmoji(":interrobang:");
-                        die($bot->sendMessageToChannel("You forgot to tell me what file to load, silly!"));
+                        $bot->sendMessageToChannel(":interrobang: You forgot to tell me what file to load, silly!");
                     } elseif (empty($command[3]) || $command[3] == "false") {
                         $loaded = $bot->load($command[2]);
-                        die($bot->sendMessageToChannel($loaded));
+                        $bot->sendMessageToChannel($loaded);
                     } else {
                         $loaded = $bot->load($command[2], true);
-                        die($bot->sendMessageToChannel($loaded));
+                        $bot->sendMessageToChannel($loaded);
                     }
                     break;
                 case "start":
                     //start the bot
                     if (!$bot->started()) {
-                        $bot->setIconEmoji(":sunglasses:");
                         $bot->start();
-                        die($bot->sendMessageToChannel("Thanks {$player_name}, I was getting bored! More trivia coming up!"));
+                        $bot->sendMessageToChannel(":sunglasses: Thanks {$player_name}, I was getting bored! More trivia coming up!");
                     } else {
-                        $bot->setIconEmoji(":stuck_out_tongue_winking_eye:");
-                        die($bot->sendMessageToChannel("Pay attention {$player_name}, we're already playing trivia!"));
+                        $bot->sendMessageToChannel(":stuck_out_tongue_winking_eye: Pay attention {$player_name}, we're already playing trivia!");
                     }
                     break;
                 case "stop":
                     if (!$bot->started()) {
-                        $bot->setIconEmoji(":stuck_out_tongue_winking_eye:");
-                        die($bot->sendMessageToChannel("We're not even playing trivia {$player_name}! (Type *!trivia start* if you want to play)"));
+                        $bot->sendMessageToChannel(":stuck_out_tongue_winking_eye: We're not even playing trivia {$player_name}! (Type *!trivia start* if you want to play)");
                     } else {
-                        $bot->setIconEmoji(":hand:");
                         $question = $bot->getCurrentQuestion();
-                        $message = "*Game stopped by {$player_name}*";
+                        $message = ":hand: Game stopped by [b]{$player_name}[/b]";
                         if (empty($question) || $question->current_hint == 1) {
                             $game->started = 0;
                             $game->stopping = 0;
@@ -99,14 +95,13 @@ class TriviaBotListener
                             $message .= " _but I've started so I'll finish..._";
                             $bot->stop();
                         }
-                        die($bot->sendMessageToChannel($message));
+                        $bot->sendMessageToChannel($message);
                     }
                     break;
                 case "delay":
                     {
                         if (empty($command[2]) || !is_numeric($command[2])) {
-                            $bot->setIconEmoji(":interrobang:");
-                            die($bot->sendMessageToChannel("You forgot to tell me how long to set the delay!"));
+                            $bot->sendMessageToChannel(":interrobang: You forgot to tell me how long to set the delay!");
                         } else {
                             if (($command[2] > 20)) {
                                 $game->delay = $command[2];
@@ -116,18 +111,17 @@ class TriviaBotListener
                                 $delay = 20;
                             }
                             $game->save();
-                            die($bot->sendMessageToChannel("Delay set to {$delay} seconds between hints."));
+                            $bot->sendMessageToChannel("Delay set to {$delay} seconds between hints.");
                         }
 
                     }
                 case "questions":
                     $total = number_format($bot->get_total_questions());
-                    die($bot->sendMessageToChannel("*{$player_name}*: there are *{$total}* questions loaded in the database."));
+                    $bot->sendMessageToChannel("[b]{$player_name}[/b]: there are [b]{$total}[/b] questions loaded in the database.");
                     break;
                 case "seen":
                     if (empty($command[2])) {
-                        $bot->setIconEmoji(":interrobang:");
-                        die($bot->sendMessageToChannel("You forgot to tell me who you're looking for!"));
+                        $bot->sendMessageToChannel(" :interrobang: You forgot to tell me who you're looking for!");
                     } else {
                         $seen_name = trim($command[2]);
                         $seen_player = \Player::find('first', ['name' => $seen_name]);
@@ -136,58 +130,57 @@ class TriviaBotListener
                             $message = "Sorry, {$player_name}, I've never seen {$seen_name}!";
                         } else {
                             $diff = number_format($now - $seen_player->last_seen);
-                            $message = "Hey {$player_name}, I last saw {$seen_name} *{$diff}* seconds ago!";
+                            $message = "Hey {$player_name}, I last saw {$seen_name} [b]{$diff}[/b] seconds ago!";
                         }
-                        die($bot->sendMessageToChannel($message));
+                        $bot->sendMessageToChannel($message);
 
 
                     }
                     break;
                 case "scores":
                     $message = "The top 3 high scores are:\n";
-                    $scorers = Player::find('all', array("order" => "high_score DESC", "limit" => 3));
+                    $scorers = Player::find('all', ["order" => "high_score DESC", "limit" => 3]);
 
                     if (!empty($scorers)) {
                         foreach ($scorers as $scorer) {
                             $score = number_format($scorer->high_score);
-                            $message .= "*{$scorer->name}* : {$score}\n";
+                            $message .= "[b]{$scorer->name}[/b] : {$score}\n";
                         }
                     }
-                    die($bot->sendMessageToChannel($message));
+                    $bot->sendMessageToChannel($message);
                     break;
                 case "rows": //the only reason this is here is because I always forget it's runs and type rows in channel!
                 case "runs":
                     $message = "The top 3 best runs (questions answered in a row before another player) are:\n";
-                    $scorers = Player::find('all', array("order" => "best_run DESC", "limit" => 3));
+                    $scorers = Player::find('all', ["order" => "best_run DESC", "limit" => 3]);
                     if (!empty($scorers)) {
                         foreach ($scorers as $scorer) {
                             $runs = number_format($scorer->best_run);
-                            $message .= "*{$scorer->name}* : {$runs}\n";
+                            $message .= "[b]{$scorer->name}[/b] : {$runs}\n";
                         }
                     }
-                    die($bot->sendMessageToChannel($message));
+                    $bot->sendMessageToChannel($message);
                     break;
                 case "answers":
                     $message = "The top 3 players by number of questions answered are:\n";
-                    $scorers = Player::find('all', array("order" => "questions_answered DESC", "limit" => 3));
+                    $scorers = Player::find('all', ["order" => "questions_answered DESC", "limit" => 3]);
                     if (!empty($scorers)) {
                         foreach ($scorers as $scorer) {
                             $runs = number_format($scorer->questions_answered);
-                            $message .= "*{$scorer->name}* : {$runs}\n";
+                            $message .= "[b]{$scorer->name}[/b] : {$runs}\n";
                         }
                     }
-                    die($bot->sendMessageToChannel($message));
+                    $bot->sendMessageToChannel($message);
                     break;
                 case "me":
                     $months = ["Never", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                     $month = $months[$player->playing_month];
-                    $bot->setIconEmoji(":ok_hand:");
-                    $message = "Information for *{$player_name}*:\n";
-                    $message .= "Current score (played in {$month}): *" . number_format($player->current_score) . "*\n";
-                    $message .= "High score: *" . number_format($player->high_score) . "*\n";
-                    $message .= "Most questions answered in a row: *" . number_format($player->best_run) . "*\n";
-                    $message .= "Total number of questions answered: *" . number_format($player->questions_answered) . "*\n";
-                    die($bot->sendMessageToChannel($message));
+                    $message = "Information for [b]{$player_name}[/b]:\n";
+                    $message .= "Current score (played in {$month}): [b]" . number_format($player->current_score) . "[/b]\n";
+                    $message .= "High score: [b]" . number_format($player->high_score) . "[/b]\n";
+                    $message .= "Most questions answered in a row: [b]" . number_format($player->best_run) . "[/b]\n";
+                    $message .= "Total number of questions answered: [b]" . number_format($player->questions_answered) . "[/b]\n";
+                    $bot->sendMessageToChannel(":ok_hand: " . $message);
                     break;
                 case "help":
                     //send the help text to the channel
@@ -200,7 +193,7 @@ class TriviaBotListener
                     $helpText .= "*!trivia answers* - shows the top 3 players by questions answered\n";
                     $helpText .= "*!trivia me* - get details on your own scoring.\n";
                     $helpText .= "*!trivia seen [player]* - says when the player last typed something in channel\n";
-                    die($bot->sendMessageToChannel($helpText));
+                    $bot->sendMessageToChannel($helpText);
                     break;
 
             }
@@ -225,7 +218,7 @@ class TriviaBotListener
                 }
                 if ($win) {
                     //this player's right!!
-                    $others = Player::find('all', array('conditions' => "id != {$player->id}"));
+                    $others = Player::find('all', ['conditions' => "id != {$player->id}"]);
                     if (!empty($others)) {
                         foreach ($others as $other) {
                             $other->current_run = 0;
@@ -249,22 +242,21 @@ class TriviaBotListener
                     $player->questions_answered++;
                     $player->save();
                     $totalscore = number_format($player->current_score);
-                    $message = "YES! *{$player_name}* that's {$player->current_run} in a row. You scored {$score} points bringing your total for the month to {$totalscore}!\n";
-                    $message .= "The answer was *{$player_text}*!\n";
+                    $message = "YES! [b]{$player_name}[/b] that's {$player->current_run} in a row. You scored {$score} points bringing your total for the month to {$totalscore}!\n";
+                    $message .= "The answer was [b]{$player_text}[/b]!\n";
                     $game->questions_without_reply = 0;
                     if (($game->stopping == 1)) {
                         $question->current_hint = 0;
                         $question->save();
                         $game->started = 0;
                         $game->stopping = 0;
-                        $message .= "*GAME STOPPED*";
+                        $message .= "[b]GAME STOPPED[/b]";
                     } else {
                         $message .= "Next question coming up...";
                         $bot->start();
                     }
                     $game->save();
-                    $bot->setIconEmoji(":clap:");
-                    die($bot->sendMessageToChannel($message));
+                    $bot->sendMessageToChannel(":clap: " . $message);
                 }
             }
         }
