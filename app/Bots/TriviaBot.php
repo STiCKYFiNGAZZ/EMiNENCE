@@ -45,7 +45,7 @@ class TriviaBot
     public function start()
     {
         $game = Game::first();
-        if (empty($game)) {
+        if (!$game) {
             $game = Game::create(["started" => 0, "stopping" => 0, "delay" => 20, "last_asked" => Carbon::now()]);
         }
 
@@ -57,7 +57,6 @@ class TriviaBot
             $on = $this->getCurrentQuestion();
         }
 
-        // \Question::update_all(array('set' => 'current_hint = 0'));
         //set a random question to ON
         $question = Question::inRandomOrder()->first();
         $question->current_hint = 1;

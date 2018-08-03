@@ -41,7 +41,7 @@ class runTriviaBot extends Command
     public function handle()
     {
         $bot = new TriviaBot();
-        $game = Game::first();
+        $game = Game::where('started', '=', 1)->first();
         $timestamp = Carbon::now();
         if (!$game) {
             $bot->start();
