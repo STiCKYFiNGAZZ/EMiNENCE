@@ -16,6 +16,7 @@ use App\Game;
 use App\Question;
 use App\QuestionSet;
 use App\Message;
+use App\Events\MessageSent;
 use Carbon\Carbon;
 
 class TriviaBot
@@ -195,11 +196,15 @@ class TriviaBot
      */
     public function sendMessageToChannel($message)
     {
-        Message::create([
+        $message = Message::create([
             'user_id' => $this->getBotID(),
             'chatroom_id' => $this->getChannel(),
             'message' => $message
         ]);
+
+        broadcast(new MessageSent($message));
+
+        return $message;
     }
 
     /**

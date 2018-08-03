@@ -21,7 +21,7 @@ use Carbon\Carbon;
 
 class TriviaBotListener
 {
-    public function handle(MessageSent $event)
+    public function handle(MessageSent $message)
     {
         $bot = new TriviaBot();
         $game = Game::first();
@@ -32,12 +32,12 @@ class TriviaBotListener
                 $bot->sendMessageToChannel($e->getMessage());
             }
         }
-        $player_id = auth()->user()->id;
-        $player_name = auth()->user()->username;
-        $player_text = //;
-        $player_channel = //;
+        $player_id = $message->user_id;
+        $player_name = $message->user->username;
+        $player_text = $message->message;
+        $player_channel = 2;
         $timestamp = Carbon::now();
-        $player = Player::find("first", ["user_id" => $player_id]);
+        $player = Player::where('user_id', '=', $player_id);
         if (empty($player)) {
             try {
                 $player = Player::create([

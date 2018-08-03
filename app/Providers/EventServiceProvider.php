@@ -32,6 +32,9 @@ class EventServiceProvider extends ServiceProvider
         'Illuminate\Auth\Events\Login' => [
             \App\Listeners\UpdateLastLogin::class,
         ],
+        'App\Events\MessageSent' => [
+            \App\Listeners\TriviaBotListener::class,
+        ],
     ];
 
     /**

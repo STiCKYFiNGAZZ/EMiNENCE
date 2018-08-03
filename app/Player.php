@@ -16,5 +16,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Player extends Model
 {
-    //
+    /**
+     * The Attributes That Are Mass Assignable
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'user_id'
+    ];
 }
