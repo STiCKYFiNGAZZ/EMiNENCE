@@ -73,7 +73,8 @@ class TriviaBot
     public function stop()
     {
         //set the flag in the database to say the game is not running
-        $game = Game::first();
+        $game = Game::where('started', '=', 1)->first();
+        $game->started = 0;
         $game->stopping = 1;
         $game->save();
     }
@@ -105,7 +106,7 @@ class TriviaBot
                         $split = explode('|', $question);
                         //first item is the question
                         $q = trim(array_shift($split));
-                        if (!empty($q) && !empty($split)) {
+                        if ($q && !$split) {
                             $a = serialize($split);
                             try {
                                 //duplicate questions won't be saved because of the unique property on the db column

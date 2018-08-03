@@ -53,7 +53,7 @@ class runTriviaBot extends Command
 
             //check if there's a question being asked
             $question = $bot->getCurrentQuestion();
-            if (!empty($question)) {
+            if ($question) {
                 $questiontext = $question->question;
                 $hint = "[b]Hint {$question->current_hint}[/b]: "; //this will hold our hint
                 //get the (first) possible answer
