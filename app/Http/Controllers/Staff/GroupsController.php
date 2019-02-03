@@ -72,6 +72,7 @@ class GroupsController extends Controller
         $group->name = $request->input('name');
         $group->slug = str_slug($request->input('name'));
         $group->position = $request->input('position');
+        $group->level = $request->input('level');
         $group->color = $request->input('color');
         $group->icon = $request->input('icon');
         $group->effect = $request->input('effect');
@@ -81,6 +82,7 @@ class GroupsController extends Controller
         $group->is_trusted = $request->input('is_trusted');
         $group->is_immune = $request->input('is_immune');
         $group->is_freeleech = $request->input('is_freeleech');
+        $group->is_incognito = $request->input('is_incognito');
         $group->can_upload = $request->input('can_upload');
         $group->autogroup = $request->input('autogroup');
 
@@ -145,6 +147,7 @@ class GroupsController extends Controller
         $group->name = $request->input('name');
         $group->slug = str_slug($request->input('name'));
         $group->position = $request->input('position');
+        $group->level = $request->input('level');
         $group->color = $request->input('color');
         $group->icon = $request->input('icon');
         $group->effect = $request->input('effect');
@@ -154,6 +157,7 @@ class GroupsController extends Controller
         $group->is_trusted = $request->input('is_trusted');
         $group->is_immune = $request->input('is_immune');
         $group->is_freeleech = $request->input('is_freeleech');
+        $group->is_incognito = $request->input('is_incognito');
         $group->can_upload = $request->input('can_upload');
         $group->autogroup = $request->input('autogroup');
 

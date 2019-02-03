@@ -50,6 +50,12 @@
                     <i class="{{ config('other.font-awesome') }} fa-newspaper"></i> @lang('staff.articles')
                 </a>
             </li>
+            <li>
+                <a href="{{ route('staff.applications.index') }}">
+                    <i class="{{ config('other.font-awesome') }} fa-list"></i> @lang('staff.applications')
+                    <span class="badge badge-danger"> {{ $app_count }} </span>
+                </a>
+            </li>
             @if (auth()->user()->group->is_admin)
                 <li>
                     <a href="{{ route('staff_forum_index') }}">
@@ -72,7 +78,11 @@
                     <i class="{{ config('other.font-awesome') }} fa-chart-pie"></i> @lang('staff.polls')
                 </a>
             </li>
-
+            <li>
+                <a href="{{ route('Staff.rss.index') }}">
+                    <i class="{{ config('other.font-awesome') }} fa-rss"></i> @lang('rss.rss')
+                </a>
+            </li>
             <li class="nav-header head">
                 <i class="{{ config('other.font-awesome') }} fa-wrench"></i> @lang('staff.torrent-tools')
             </li>
@@ -150,7 +160,7 @@
                 <i class="{{ config('other.font-awesome') }} fa-file"></i> @lang('staff.logs')
             </li>
             <li>
-                <a href="{{ route('getActivity') }}">
+                <a href="{{ route('activity.index') }}">
                     <i class="{{ config('other.font-awesome') }} fa-file"></i> @lang('staff.activity-log')
                 </a>
             </li>

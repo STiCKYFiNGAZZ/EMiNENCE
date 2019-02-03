@@ -56,8 +56,12 @@ class InviteController extends Controller
             return redirect()->route('home')
             ->with($this->toastr->error('Your Invite Rights Have Been Revoked!!!', 'Whoops!', ['options']));
         }
+        if (config('other.invites_restriced') == true && ! in_array($user->group->name, config('other.invite_groups'))) {
+            return redirect()->route('home')
+                ->with($this->toastr->error('Invites are currently disabled for your group.', 'Whoops!', ['options']));
+        }
 
-        return view('user.invite', ['user' => $user]);
+        return view('user.invite', ['user' => $user, 'route' => 'invite']);
     }
 
     /**
@@ -71,11 +75,9 @@ class InviteController extends Controller
     {
         $current = new Carbon();
         $user = auth()->user();
-        $invites_restricted = config('other.invites_restriced', false);
-        $invite_groups = config('other.invite_groups', []);
 
-        if ($invites_restricted && ! in_array($user->group->name, $invite_groups)) {
-            return redirect()->route('invite')
+        if (config('other.invites_restriced') == true && ! in_array($user->group->name, config('other.invite_groups'))) {
+            return redirect()->route('home')
                 ->with($this->toastr->error('Invites are currently disabled for your group.', 'Whoops!', ['options']));
         }
 
@@ -170,7 +172,7 @@ class InviteController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function inviteTree($username, $id)
+    public function invites($username, $id)
     {
         $user = auth()->user();
         $owner = User::findOrFail($id);
@@ -178,6 +180,6 @@ class InviteController extends Controller
 
         $invites = Invite::with(['sender', 'receiver'])->where('user_id', '=', $id)->latest()->paginate(25);
 
-        return view('user.invitetree', ['owner' => $owner, 'invites' => $invites]);
+        return view('user.invites', ['owner' => $owner, 'invites' => $invites, 'route' => 'invite']);
     }
 }

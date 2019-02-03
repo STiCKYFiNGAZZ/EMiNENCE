@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use App\Helpers\Bbcode;
 use App\Helpers\StringHelper;
 use Gstt\Achievements\Achiever;
-use function theodorejb\polycast\to_int;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -54,8 +53,21 @@ class User extends Authenticatable
     public function group()
     {
         return $this->belongsTo(Group::class)->withDefault([
-            'color' => '#FF9966',
-            'icon'  => 'fal fa-robot',
+            'color'  => config('user.group.defaults.color'),
+            'effect'  => config('user.group.defaults.effect'),
+            'icon'  => config('user.group.defaults.icon'),
+            'name'  => config('user.group.defaults.name'),
+            'slug'  => config('user.group.defaults.slug'),
+            'position' => config('user.group.defaults.position'),
+            'is_admin'  => config('user.group.defaults.is_admin'),
+            'is_freeleech'  => config('user.group.defaults.is_freeleech'),
+            'is_immune'  => config('user.group.defaults.is_immune'),
+            'is_incognito'  => config('user.group.defaults.is_incognito'),
+            'is_internal'  => config('user.group.defaults.is_internal'),
+            'is_modo'  => config('user.group.defaults.is_modo'),
+            'is_trusted'  => config('user.group.defaults.is_trusted'),
+            'can_upload'  => config('user.group.defaults.can_upload'),
+            'level' => config('user.group.defaults.level'),
         ]);
     }
 
@@ -102,6 +114,36 @@ class User extends Authenticatable
     public function messages()
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Has One Privacy Object.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function privacy()
+    {
+        return $this->hasOne(UserPrivacy::class);
+    }
+
+    /**
+     * Has One Notifications Object.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function notification()
+    {
+        return $this->hasOne(UserNotification::class);
+    }
+
+    /**
+     * Has Many RSS Feeds.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function rss()
+    {
+        return $this->hasMany(Rss::class);
     }
 
     /**
@@ -441,19 +483,105 @@ class User extends Authenticatable
      */
     public function subscriptions()
     {
-        return $this->hasMany(TopicSubscription::class);
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get the Users username as slug.
+     *
+     * @return string
+     */
+    public function getSlugAttribute()
+    {
+        return str_slug($this->username);
+    }
+
+    /**
+     * Get the Users accepts notification as bool.
+     *
+     * @return int
+     */
+    public function acceptsNotification(self $sender, self $target, $group = 'follower', $type = false)
+    {
+        $target_group = 'json_'.$group.'_groups';
+        if ($sender->id == $target->id) {
+            return false;
+        }
+        if ($sender->group->is_modo || $sender->group->is_admin) {
+            return true;
+        }
+        if ($target->block_notifications && $target->block_notifications == 1) {
+            return false;
+        }
+        if ($target->notification && $type && (! $target->notification->$type)) {
+            return false;
+        }
+        if ($target->notification && $target->notification->$target_group && is_array($target->notification->$target_group['default_groups'])) {
+            if (array_key_exists($sender->group->id, $target->notification->$target_group['default_groups'])) {
+                if ($target->notification->$target_group['default_groups'][$sender->group->id] == 1) {
+                    return true;
+                }
+
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get the Users allowed answer as bool.
+     *
+     * @return int
+     */
+    public function isAllowed(self $target, $group = 'profile', $type = false)
+    {
+        $target_group = 'json_'.$group.'_groups';
+        $sender = auth()->user();
+        if ($sender->id == $target->id) {
+            return true;
+        }
+        if ($sender->group->is_modo || $sender->group->is_admin) {
+            return true;
+        }
+        if ($target->private_profile && $target->private_profile == 1) {
+            return false;
+        }
+        if ($target->privacy && $type && (! $target->privacy->$type || $target->privacy->$type == 0)) {
+            return false;
+        }
+        if ($target->privacy && $target->privacy->$target_group && is_array($target->privacy->$target_group['default_groups'])) {
+            if (array_key_exists($sender->group->id, $target->privacy->$target_group['default_groups'])) {
+                if ($target->privacy->$target_group['default_groups'][$sender->group->id] == 1) {
+                    return true;
+                }
+
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        return true;
     }
 
     /**
      * Does Subscription Exist.
      *
+     * @param $type
      * @param $topic_id
      *
      * @return string
      */
-    public function isSubscribed($topic_id)
+    public function isSubscribed(string $type, $topic_id)
     {
-        return (bool) $this->subscriptions()->where('topic_id', '=', $topic_id)->first(['id']);
+        if ($type == 'topic') {
+            return (bool) $this->subscriptions()->where('topic_id', '=', $topic_id)->first(['id']);
+        }
+
+        return (bool) $this->subscriptions()->where('forum_id', '=', $topic_id)->first(['id']);
     }
 
     /**
@@ -545,7 +673,7 @@ class User extends Authenticatable
             return '∞';
         }
 
-        $bytes = to_int(round($this->uploaded / $ratio));
+        $bytes = round($this->uploaded / $ratio);
 
         return StringHelper::formatBytes($bytes);
     }
@@ -684,7 +812,7 @@ class User extends Authenticatable
      */
     public function getTotalSeedSize()
     {
-        $peers = Peer::where('user_id', '=', $this->id)->pluck('torrent_id');
+        $peers = Peer::where('user_id', '=', $this->id)->where('seeder', '=', 1)->pluck('torrent_id');
 
         return Torrent::whereIn('id', $peers)->sum('size');
     }

@@ -17,9 +17,11 @@ use App\User;
 use App\Group;
 use App\Invite;
 use Carbon\Carbon;
+use App\UserPrivacy;
 use App\Rules\Captcha;
 use App\PrivateMessage;
 use App\UserActivation;
+use App\UserNotification;
 use Brian2694\Toastr\Toastr;
 use Illuminate\Http\Request;
 use App\Jobs\SendActivationMail;
@@ -88,6 +90,7 @@ class RegisterController extends Controller
         $user->uploaded = config('other.default_upload');
         $user->downloaded = config('other.default_download');
         $user->style = config('other.default_style', 0);
+        $user->locale = config('app.locale');
         $user->group_id = $validatingGroup->id;
 
         if (config('email-white-blacklist.enabled') === 'allow' && config('captcha.enabled') == true) {
@@ -136,6 +139,16 @@ class RegisterController extends Controller
                 ->with($this->toastr->error($v->errors()->toJson(), 'Whoops!', ['options']));
         } else {
             $user->save();
+
+            $privacy = new UserPrivacy();
+            $privacy->setDefaultValues();
+            $privacy->user_id = $user->id;
+            $privacy->save();
+
+            $notification = new UserNotification();
+            $notification->setDefaultValues();
+            $notification->user_id = $user->id;
+            $notification->save();
 
             if ($key) {
                 // Update The Invite Record
